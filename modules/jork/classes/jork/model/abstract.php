@@ -802,6 +802,24 @@ abstract class JORK_Model_Abstract implements ArrayAccess, IteratorAggregate{
         return $rval;
     }
 
+    public function atomics($add_unloaded = FALSE) {
+        $rval = array();
+        if ($add_unloaded) {
+            foreach ($this->schema()->atomics as $k => $dummy) {
+                $rval[$k] = isset($this->_atomics[$k])
+                        ? $this->_atomics[$k]['value']
+                        : NULL;
+            }
+        } else {
+            foreach ($this->schema()->atomics as $k => $dummy) {
+                if (isset($this->_atomics[$k])) {
+                    $rval[$k] = $this->_atomics[$k]['value'];
+                }
+            }
+        }
+        return $rval;
+    }
+
     public function __unset($key) {
         $schema = $this->schema();
         if (isset($schema->atomics[$key])) {
