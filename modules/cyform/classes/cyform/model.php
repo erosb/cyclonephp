@@ -72,11 +72,20 @@ class CyForm_Model {
         return $this;
     }
 
+    /**
+     * @param string $key
+     * @param string $value
+     * @return CyForm_Model
+     */
     public function attribute($key, $value) {
         $this->attributes[$key] = $value;
         return $this;
     }
 
+    /**
+     * @param CyForm_Model_Field $field
+     * @return CyForm_Model
+     */
     public function field(CyForm_Model_Field $field) {
         if (is_null($field->name)) {
             $this->fields []= $field;
@@ -94,5 +103,5 @@ class CyForm_Model {
         $this->view = $view;
         return $this;
     }
-    
+
 }

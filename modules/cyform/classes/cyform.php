@@ -6,6 +6,9 @@
  */
 class CyForm {
 
+    /**
+     * @return CyForm_Model
+     */
     public static function model() {
         return new CyForm_Model;
     }
@@ -25,8 +28,24 @@ class CyForm {
         return new CyForm_Model_Field($type, $name);
     }
 
+    /**
+     * @param callback $callback
+     * @return CyForm_Model_DataSource
+     */
     public static function source($callback) {
         return new CyForm_Model_DataSource($callback);
+    }
+
+    /**
+     * @param string $name
+     * @return CyForm_Model
+     */
+    public static function get_model($name) {
+        $file = FileSystem::find_file('forms/' . $name . '.php');
+        if (FALSE === $file)
+            throw new CyForm_Exception("form not found: $name");
+
+        return require $file;
     }
 
     /**
@@ -67,11 +86,7 @@ class CyForm {
      */
     public function  __construct($model, $load_data_sources = true) {
         if (is_string($model)) {
-            $file = FileSystem::find_file('forms/' . $model . '.php');
-            if (FALSE === $file)
-                throw new CyForm_Exception("form not found: $model");
-            
-            $model = require $file;
+            $model = self::get_model($model);
         }
 
         if (  ! ($model instanceof CyForm_Model))
@@ -336,6 +351,43 @@ class CyForm {
         }
         return $view->render();
     }
+
+
+    /**
+     * @param array $fields the values should contain the field names to use. The keys are indifferent.
+     * @param boolean $consider_order if TRUE then the used fields will be ordered by their keys in $fields
+     * @return CyForm_Model
+     */
+    public function use_fields($fields, $consider_order = FALSE) {
+        if ($consider_order) {
+            $new_fields = array();
+            foreach ($fields as $field_name) {
+                $new_fields[$field_name] = $this->_fields[$field_name];
+            }
+            $this->_fields = $new_fields;
+        } else {
+            foreach ($this->_fields as $field_name => $val) {
+                if ( ! in_array($field_name, $fields)) {
+                    unset($this->_fields[$field_name]);
+                }
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @param array $fields the values should contain the field names to hide. The keys are indifferent.
+     * @return CyForm_Model
+     */
+    public function hide_fields($fields) {
+        foreach ($fields as $field_name) {
+            if ( ! isset($this->_fields[$field_name]))
+                throw new CyForm_Exception("Can't hide field '$field_name' in the form since it does not exist");
+            unset($this->_fields[$field_name]);
+        }
+        return $this;
+    }
+    
 
     public function  __toString() {
         try {

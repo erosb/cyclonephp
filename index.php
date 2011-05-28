@@ -39,6 +39,7 @@ FileSystem::bootstrap(array(
     'unittest' => TOOLPATH . 'unittest' . DIRECTORY_SEPARATOR,
     'config' => MODPATH . 'config' . DIRECTORY_SEPARATOR,
     'cytpl' => MODPATH . 'cytpl' . DIRECTORY_SEPARATOR,
+    'logger' => MODPATH . 'logger' . DIRECTORY_SEPARATOR,
     'system' => SYSPATH
 ), SYSPATH . '.cache' . DIRECTORY_SEPARATOR);
 
@@ -51,12 +52,6 @@ Env::init_legacy();
 ini_set('unserialize_callback_func', 'spl_autoload_call');
 
 Session::instance();
-
-//Controller_Core::$minify_js = Kohana::$environment != Kohana::DEVELOPMENT;
-
-Log::$log_level = Kohana::$environment;
-
-register_shutdown_function('Log::write');
 
 /**
  * Set the routes. Each route must have a minimum of a name, a URI and a set of
@@ -71,17 +66,17 @@ Route::set('default', '(<controller>(/<action>(/<id>)))')
 
 if (!defined('SUPPRESS_REQUEST')) {
     $request = Request::instance();
-    if (Kohana::$environment != Kohana::DEVELOPMENT) {
+    if (Kohana::$environment != Env::DEV) {
         try {
             $request->execute();
         } catch (ReflectionException $ex) {
-            Log::warning('404 not found: ' . $_SERVER['PATH_INFO']);
+            log_warning('', '404 not found: ' . Request::instance()->uri);
             $request->redirect(URL::base(), 404);
         } catch (Exception_BadRequest $ex) {
-            Log::warning('500 bad request: ' . $_SERVER['PATH_INFO']);
+            log_warning('', '500 bad request: ' . Request::instance()->uri);
             $request->redirect(URL::base(), 500);
         } catch (Exception $ex) {
-            Log::error('500 internal error: ' . $_SERVER['PATH_INFO']);
+            log_error('', '500 internal error: ' . Request::instance()->uri);
             $request->redirect(URL::base(), 500);
         }
     } else {

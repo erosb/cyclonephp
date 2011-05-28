@@ -55,7 +55,7 @@ abstract class Record_Abstract {
     protected static function _inst($classname) {
         if ( ! array_key_exists($classname, self::$_instances)) {
             $inst = new $classname;
-            $inst->_schema = new stdClass;
+            $inst->_schema = new Record_Schema;
             $inst->_schema->class = $classname;
             $inst->_row = null;
             $inst->setup();
@@ -69,7 +69,7 @@ abstract class Record_Abstract {
      * 
      * @return stdClass
      */
-    protected function schema() {
+    public function schema() {
         if ( ! array_key_exists(get_class($this), self::$_instances)) {
             self::_inst(get_class($this));
         }
@@ -104,7 +104,7 @@ abstract class Record_Abstract {
         switch(count($result)) {
             case 1: return $result[0];
             case 0: return null;
-            default: throw new Exception('more than one results');
+            default: throw new Exception('more than one results: ' . $query->compile($schema->database));
         }
     }
 
@@ -229,4 +229,8 @@ abstract class Record_Abstract {
                 || array_key_exists($name, $this->_transient_data);
     }
 
+    public function as_array() {
+        return $this->_row;
+    }
+    
 }
