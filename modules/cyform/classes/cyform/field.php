@@ -46,6 +46,7 @@ class CyForm_Field {
             , CyForm_Model_Field $model, $cfg) {
         $this->_form = $form;
         $this->_model = $model;
+        $this->value = $model->value;
         $this->_cfg = $cfg;
     }
 

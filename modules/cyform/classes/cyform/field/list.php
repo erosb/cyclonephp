@@ -49,6 +49,8 @@ class CyForm_Field_List extends CyForm_Field {
         if ($this->_model->multiple && is_null($this->value)) {
             $this->value = array();
         }
+
+        $this->_model->value = $this->value;
         
         $this->_model->attributes['name'] = $this->_model->name;
 

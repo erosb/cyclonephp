@@ -16,6 +16,8 @@ class CyForm_Model_Field {
 
     public $view;
 
+    public $value;
+
     public $validators = array();
 
     public $on_empty = '';
@@ -74,6 +76,15 @@ class CyForm_Model_Field {
      */
     public function view($view) {
         $this->view = $view;
+        return $this;
+    }
+
+    /**
+     * @param mixed $value the default field value
+     * @return CyForm_Model_Field
+     */
+    public function value($value) {
+        $this->value = $value;
         return $this;
     }
 
