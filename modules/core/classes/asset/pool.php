@@ -64,7 +64,7 @@ class Asset_Pool {
                             CssMin::minify(file_get_contents(Kohana::find_file($path, $file, 'css')));
                     }
                 }
-                Log::debug('generating asset file: '.$minified_file_abs_path);
+                Log::for_class($this)->add_debug('generating asset file: '.$minified_file_abs_path);
                 file_put_contents($minified_file_abs_path, $all_src);
             }
             $new_resources []= $minified_file_rel_path;
@@ -96,14 +96,14 @@ class Asset_Pool {
         return $head_view;
     }
 
-    protected function transform_assets() {
+    public function transform_assets() {
         $config = Config::inst();
         foreach (array('js', 'css') as $type) {
             if ($config->get('core.minify.'.$type)) {
                 $this->minify_assets($type);
             } else {
                 $new_assets = array();
-                $path = $config->get('core.asset_path').$type;
+                $path = 'assets'.DIRECTORY_SEPARATOR.$type;
                 foreach ($this->assets[$type] as $file => $minify) {
                     $abs_path = Kohana::find_file($path, $file, $type);
                     $new_assets []= substr($abs_path, strlen(DOCROOT));
