@@ -205,10 +205,16 @@ abstract class JORK_Model_Abstract implements ArrayAccess, IteratorAggregate{
     }
 
     /**
-     * Only for internal usage.
+     * Used to quickly load the atomic properties of the entity. The method fails
+     * with an ErrorException if an atomic property exists in the \c $atomics
+     * parameter but is not a declared atomic property in the model schema. If the
+     * \c $atomics comes from form data, then it's better to use
+     * \c JORK_Model_Abstract::set_atomics() since that method won't fail if an
+     * undeclared atomic is found (form data can contain eg. CSRF tokens).
      *
      * Used by <code>JORK_Mapper_Entity::map_row()</code> to quickly load the atomic properties
      * instead of executing <code>JORK_Model_Abstract::__set()</code> each time.
+     *
      *
      * @param array<JORK_Model_Abstract> $components
      * @usedby JORK_Mapper_Entity::map_row()
@@ -228,6 +234,37 @@ abstract class JORK_Model_Abstract implements ArrayAccess, IteratorAggregate{
                     'value' => $v,
                     'persistent' => TRUE
                 );
+            }
+        }
+    }
+
+    /**
+     * Used to quickly load the atomic properties of the entity. Unlike
+     * \c JORK_Model_Abstract::populate_atomics() won't fail if an undeclared
+     * property is found in \c $atomics. This method is recommended for loading
+     * an entity from form data.
+     *
+     * @param array $atomics
+     */
+    public function set_atomics($atomics) {
+        $schema = $this->schema();
+        if (self::$_cfg['force_type']) {
+            foreach ($atomics as $k => $v) {
+                if (isset($schema->atomics[$k])) {
+                    $this->_atomics[$k] = array(
+                        'value' => $this->force_type($v, $schema->atomics[$k]['type']),
+                        'persistent' => TRUE
+                    );
+                }
+            }
+        } else {
+            foreach ($atomics as $k => $v) {
+                if (isset($schema->atomics[$k])) {
+                    $this->_atomics[$k] = array(
+                        'value' => $v,
+                        'persistent' => TRUE
+                    );
+                }
             }
         }
     }
