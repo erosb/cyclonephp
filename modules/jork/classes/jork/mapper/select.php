@@ -181,7 +181,7 @@ abstract class JORK_Mapper_Select {
             $expr->left_operand = $left_mapper->resolve_prop_chain($left_prop_chain);
         } elseif ($left_is_model) {
             $left_class = $expr->left_operand->schema()->class;
-            $expr->left_operand = $expr->left_operand->pk();
+            $expr->left_operand = DB::esc($expr->left_operand->pk());
         }
 
         if ($right_is_array) {
@@ -194,7 +194,7 @@ abstract class JORK_Mapper_Select {
             $expr->right_operand = $right_mapper->resolve_prop_chain($right_prop_chain);
         } elseif ($right_is_model) {
             $right_class = $expr->right_operand->schema()->class;
-            $expr->right_operand = $expr->right_operand->pk();
+            $expr->right_operand = DB::esc($expr->right_operand->pk());
         }
         if ($left_class != $right_class)
             throw new JORK_Exception("unable to check equality of class '$left_class' with class '$right_class'");
