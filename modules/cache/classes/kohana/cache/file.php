@@ -32,19 +32,13 @@
  * *  Kohana 3.0.x
  * *  PHP 5.2.4 or greater
  * 
- * @package    Kohana
- * @category   Cache
+ * @package    Kohana/Cache
+ * @category   Base
  * @author     Kohana Team
  * @copyright  (c) 2009-2010 Kohana Team
  * @license    http://kohanaphp.com/license
  */
-class Kohana_Cache_File extends Cache {
-
-	// !!! NOTICE !!!
-	// THIS CONSTANT IS USED BY THE FILE CACHE CLASS
-	// INTERNALLY. USE THE CONFIGURATION FILE TO
-	// REDEFINE THE CACHE DIRECTORY.
-	const CACHE_DIR = 'cache/.kohana_cache';
+class Kohana_Cache_File extends Cache implements Kohana_Cache_GarbageCollect {
 
 	/**
 	 * Creates a hashed filename based on the string. This is used
@@ -58,7 +52,7 @@ class Kohana_Cache_File extends Cache {
 	 */
 	protected static function filename($string)
 	{
-		return sha1($string).'.txt';
+		return sha1($string).'.json';
 	}
 
 	/**
@@ -80,23 +74,24 @@ class Kohana_Cache_File extends Cache {
 
 		try
 		{
-			$directory = Arr::get($this->_config, 'cache_dir', APPPATH.Cache_File::CACHE_DIR);
-			$this->_cache_dir = new RecursiveDirectoryIterator($directory);
+			$directory = Arr::get($this->_config, 'cache_dir', Kohana::$cache_dir);
+			$this->_cache_dir = new SplFileInfo($directory);
 		}
+		// PHP < 5.3 exception handle
+		catch (ErrorException $e)
+		{
+			$this->_cache_dir = $this->_make_directory($directory, 0777, TRUE);
+		}
+		// PHP >= 5.3 exception handle
 		catch (UnexpectedValueException $e)
 		{
-			if ( ! mkdir($directory, 0777, TRUE))
-			{
-				throw new Kohana_Cache_Exception('Failed to create the defined cache directory : :directory', array(':directory' => $directory));
-			}
-			chmod($directory, 0777);
-			$this->_cache_dir = new RecursiveDirectoryIterator($directory);
+			$this->_cache_dir = $this->_make_directory($directory, 0777, TRUE);
 		}
 
 		// If the defined directory is a file, get outta here
 		if ($this->_cache_dir->isFile())
 		{
-			throw new Kohana_Cache_Exception('Unable to create cache directory as a already file exists : :resource', array(':resource' => $this->_cache_dir->getRealPath()));
+			throw new Kohana_Cache_Exception('Unable to create cache directory as a file already exists : :resource', array(':resource' => $this->_cache_dir->getRealPath()));
 		}
 
 		// Check the read status of the directory
@@ -138,7 +133,7 @@ class Kohana_Cache_File extends Cache {
 			$file = new SplFileInfo($directory.$filename);
 
 			// If file does not exist
-			if ( ! $file->getRealPath())
+			if ( ! $file->isFile())
 			{
 				// Return default value
 				return $default;
@@ -233,7 +228,7 @@ class Kohana_Cache_File extends Cache {
 			$type = gettype($data);
 
 			// Serialize the data
-			$data = json_encode((object) array(
+			$data = json_encode( (object) array(
 				'payload'  => ($type === 'string') ? $data : serialize($data),
 				'expiry'   => time() + $lifetime,
 				'type'     => $type
@@ -300,6 +295,18 @@ class Kohana_Cache_File extends Cache {
 	}
 
 	/**
+	 * Garbage collection method that cleans any expired
+	 * cache entries from the cache.
+	 *
+	 * @return  void
+	 */
+	public function garbage_collect()
+	{
+		$this->_delete_file($this->_cache_dir, TRUE, FALSE, TRUE);
+		return;
+	}
+
+	/**
 	 * Deletes files recursively and returns FALSE on any errors
 	 * 
 	 *     // Delete a file or folder whilst retaining parent directory and ignore all errors
@@ -308,10 +315,11 @@ class Kohana_Cache_File extends Cache {
 	 * @param   SplFileInfo  file
 	 * @param   boolean  retain the parent directory
 	 * @param   boolean  ignore_errors to prevent all exceptions interrupting exec
+	 * @param   boolean  only expired files
 	 * @return  boolean
 	 * @throws  Kohana_Cache_Exception
 	 */
-	protected function _delete_file(SplFileInfo $file, $retain_parent_directory = FALSE, $ignore_errors = FALSE)
+	protected function _delete_file(SplFileInfo $file, $retain_parent_directory = FALSE, $ignore_errors = FALSE, $only_expired = FALSE)
 	{
 		// Allow graceful error handling
 		try
@@ -321,8 +329,27 @@ class Kohana_Cache_File extends Cache {
 			{
 				try
 				{
-					// Try to delete
-					unlink($file->getRealPath());
+					// If only expired is not set
+					if ($only_expired === FALSE)
+					{
+						// We want to delete the file
+						$delete = TRUE;
+					}
+					// Otherwise...
+					else
+					{
+						// Assess the file expiry to flag it for deletion
+						$json = $file->openFile('r')->current();
+						$data = json_decode($json);
+						$delete = $data->expiry < time();
+					}
+
+					// If the delete flag is set
+					if ($delete === TRUE)
+					{
+						// Try to delete
+						unlink($file->getRealPath());
+					}
 				}
 				catch (ErrorException $e)
 				{
@@ -334,7 +361,7 @@ class Kohana_Cache_File extends Cache {
 				}
 			}
 			// Else, is directory
-			else if ($file->isDir())
+			elseif ($file->isDir())
 			{
 				// Create new DirectoryIterator
 				$files = new DirectoryIterator($file->getPathname());
@@ -346,7 +373,7 @@ class Kohana_Cache_File extends Cache {
 					$name = $files->getFilename();
 
 					// If the name is not a dot
-					if ($name != '.' and $name != '..')
+					if ($name != '.' AND $name != '..' AND substr($file->getFilename(), 0, 1) == '.')
 					{
 						// Create new file resource
 						$fp = new SplFileInfo($files->getRealPath());
@@ -409,5 +436,28 @@ class Kohana_Cache_File extends Cache {
 	protected function _resolve_directory($filename)
 	{
 		return $this->_cache_dir->getRealPath().DIRECTORY_SEPARATOR.$filename[0].$filename[1].DIRECTORY_SEPARATOR;
+	}
+
+	/**
+	 * Makes the cache directory if it doesn't exist. Simply a wrapper for
+	 * `mkdir` to ensure DRY principles
+	 *
+	 * @see     http://php.net/manual/en/function.mkdir.php
+	 * @param   string   directory 
+	 * @param   string   mode 
+	 * @param   string   recursive 
+	 * @param   string   context 
+	 * @return  SplFileInfo
+	 * @throws  Kohana_Cache_Exception
+	 */
+	protected function _make_directory($directory, $mode = 0777, $recursive = FALSE, $context = NULL)
+	{
+		if ( ! mkdir($directory, $mode, $recursive, $context))
+		{
+			throw new Kohana_Cache_Exception('Failed to create the defined cache directory : :directory', array(':directory' => $directory));
+		}
+		chmod($directory, $mode);
+
+		return new SplFileInfo($directory);;
 	}
 }

@@ -67,8 +67,8 @@
  * *  Kohana 3.0.x
  * *  PHP 5.2.4 or greater
  * 
- * @package    Kohana
- * @category   Cache
+ * @package    Kohana/Cache
+ * @category   Base
  * @version    2.0
  * @author     Kohana Team
  * @copyright  (c) 2009-2010 Kohana Team
@@ -120,14 +120,14 @@ abstract class Kohana_Cache {
 			return Cache::$instances[$group];
 		}
 
-		$config = Kohana::config('cache');
+		$config = Config::inst()->get('cache');
 
-		if ( ! $config->offsetExists($group))
+		if ( ! isset($config[$group]))
 		{
 			throw new Kohana_Cache_Exception('Failed to load Kohana Cache group: :group', array(':group' => $group));
 		}
 
-		$config = $config->get($group);
+		$config = $config[$group];
 
 		// Create a new cache type instance
 		$cache_class = 'Cache_'.ucfirst($config['driver']);
@@ -137,8 +137,44 @@ abstract class Kohana_Cache {
 		return Cache::$instances[$group];
 	}
 
+    protected static $_class_adapters = array();
+
+    protected static $_adapter_cfg;
+
+    /**
+     *
+     * @param mixed $class a classname or an object
+     * @return Cache
+     */
+    public static function for_class($class) {
+        if (is_object($class)) {
+            $class = get_class($class);
+        }
+        if ( ! isset(self::$_class_adapters[$class])) {
+            if (NULL === self::$_adapter_cfg) {
+                self::$_adapter_cfg = Config::inst()->get('cache.adapters');
+            }
+            $classname_len = strlen($class);
+            $longest_matching_prefix_len = NULL;
+            $longest_matching_prefix = NULL;
+            foreach (self::$_adapter_cfg as $prefix => $adapter) {
+                $prefix_len = strlen($prefix);
+                $classname_pref = substr($class, 0, $prefix_len);
+                if ($classname_pref == $prefix
+                        && $prefix_len >= $longest_matching_prefix_len) {
+                        $longest_matching_prefix_len = $prefix_len;
+                        $longest_matching_prefix = $prefix;
+                }
+            }
+            if (NULL === $longest_matching_prefix)
+                throw new Log_Exception("No cache adapter found for '$class'");
+            self::$_class_adapters[$class] = self::$_adapter_cfg[$longest_matching_prefix];
+        }
+        return self::instance(self::$_class_adapters[$class]);
+    }
+
 	/**
-	 * @var  Kohana_Config
+	 * @var  Config
 	 */
 	protected $_config;
 

@@ -30,8 +30,8 @@
  * *  PHP 5.2.4 or greater
  * *  APC PHP extension
  * 
- * @package    Kohana
- * @category   Cache
+ * @package    Kohana/Cache
+ * @category   Base
  * @author     Kohana Team
  * @copyright  (c) 2009-2010 Kohana Team
  * @license    http://kohanaphp.com/license
@@ -71,7 +71,9 @@ class Kohana_Cache_Apc extends Cache {
 	 */
 	public function get($id, $default = NULL)
 	{
-		return (($data = apc_fetch($this->_sanitize_id($id))) === FALSE) ? $default : $data;
+		$data = apc_fetch($this->_sanitize_id($id), $success);
+
+		return $success ? $data : $default;
 	}
 
 	/**

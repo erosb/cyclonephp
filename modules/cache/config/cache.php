@@ -13,9 +13,13 @@ return array
 				'host'             => 'localhost',  // Memcache Server
 				'port'             => 11211,        // Memcache port number
 				'persistent'       => FALSE,        // Persistent connection
+				'weight'           => 1,
+				'timeout'          => 1,
+				'retry_interval'   => 15,
+				'status'           => TRUE,
 			),
 		),
-		'default_expire'     => 3600,
+		'instant_death'      => TRUE,               // Take server offline immediately on first fail (no retry)
 	),
 	'memcachetag' => array
 	(
@@ -29,13 +33,22 @@ return array
 				'host'             => 'localhost',  // Memcache Server
 				'port'             => 11211,        // Memcache port number
 				'persistent'       => FALSE,        // Persistent connection
+				'weight'           => 1,
+				'timeout'          => 1,
+				'retry_interval'   => 15,
+				'status'           => TRUE,
 			),
 		),
-		'default_expire'     => 3600,
+		'instant_death'      => TRUE,
 	),
 	'apc'      => array
 	(
 		'driver'             => 'apc',
+		'default_expire'     => 3600,
+	),
+	'wincache' => array
+	(
+		'driver'             => 'wincache',
 		'default_expire'     => 3600,
 	),
 	'sqlite'   => array
@@ -44,7 +57,6 @@ return array
 		'default_expire'     => 3600,
 		'database'           => APPPATH.'cache/kohana-cache.sql3',
 		'schema'             => 'CREATE TABLE caches(id VARCHAR(127) PRIMARY KEY, tags VARCHAR(255), expiration INTEGER, cache TEXT)',
-		'default_expire'     => 3600,
 	),
 	'eaccelerator'           => array
 	(
@@ -55,10 +67,13 @@ return array
 		'driver'             => 'xcache',
 		'default_expire'     => 3600,
 	),
-		'file'    => array
+	'file'    => array
 	(
 		'driver'             => 'file',
-		'cache_dir'          => APPPATH.'cache/.kohana_cache',
+		'cache_dir'          => APPPATH.'cache',
 		'default_expire'     => 3600,
-	)
+	),
+        'adapters' => array(
+            '' => 'file'
+        )
 );

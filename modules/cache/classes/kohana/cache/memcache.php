@@ -24,6 +24,7 @@
  *                              'timeout'          => 1,
  *                              'retry_interval'   => 15,
  *                              'status'           => TRUE,
+ *				'instant_death'	   => TRUE,
  *                              'failure_callback' => array('className', 'classMethod')
  *                         ),
  *                         // Second memcache server
@@ -72,8 +73,8 @@
  * *  Memcache (plus Memcached-tags for native tagging support)
  * *  Zlib
  * 
- * @package    Kohana
- * @category   Cache
+ * @package    Kohana/Cache
+ * @category   Base
  * @version    2.0
  * @author     Kohana Team
  * @copyright  (c) 2009-2010 Kohana Team
@@ -97,6 +98,13 @@ class Kohana_Cache_Memcache extends Cache {
 	 * @var string
 	 */
 	protected $_flags;
+
+	/**
+	 * The default configuration for the memcached server
+	 *
+	 * @var array
+	 */
+	protected $_default_config = array();
 
 	/**
 	 * Constructs the memcache Kohana_Cache object
@@ -127,22 +135,23 @@ class Kohana_Cache_Memcache extends Cache {
 		}
 
 		// Setup default server configuration
-		$config = array(
-			'host'             => 'localhost',
-			'port'             => 11211,
-			'persistent'       => FALSE,
-			'weight'           => 1,
-			'timeout'          => 1,
-			'retry_interval'   => 15,
-			'status'           => TRUE,
-			'failure_callback' => NULL,
+		$this->_default_config = array(
+				'host'             => 'localhost',
+				'port'             => 11211,
+				'persistent'       => FALSE,
+				'weight'           => 1,
+				'timeout'          => 1,
+				'retry_interval'   => 15,
+				'status'           => TRUE,
+				'instant_death'	   => TRUE,
+				'failure_callback' => array($this, '_failed_request'),
 		);
 
 		// Add the memcache servers to the pool
 		foreach ($servers as $server)
 		{
 			// Merge the defined config with defaults
-			$server += $config;
+			$server += $this->_default_config;
 
 			if ( ! $this->_memcache->addServer($server['host'], $server['port'], $server['persistent'], $server['weight'], $server['timeout'], $server['retry_interval'], $server['status'], $server['failure_callback']))
 			{
@@ -264,5 +273,52 @@ class Kohana_Cache_Memcache extends Cache {
 		sleep(1);
 
 		return $result;
+	}
+
+	/**
+	 * Callback method for Memcache::failure_callback to use if any Memcache call
+	 * on a particular server fails. This method switches off that instance of the
+	 * server if the configuration setting `instant_death` is set to `TRUE`.
+	 *
+	 * @param   string   hostname 
+	 * @param   integer  port 
+	 * @return  void|boolean
+	 * @since   3.0.8
+	 */
+	public function _failed_request($hostname, $port)
+	{
+		if ( ! $this->_config['instant_death'])
+			return; 
+
+		// Setup non-existent host
+		$host = FALSE;
+
+		// Get host settings from configuration
+		foreach ($this->_config['servers'] as $server)
+		{
+			// Merge the defaults, since they won't always be set
+			$server += $this->_default_config;
+			// We're looking at the failed server
+			if ($hostname == $server['host'] and $port == $server['port'])
+			{
+				// Server to disable, since it failed
+				$host = $server;
+				continue;
+			}
+		}
+
+		if ( ! $host)
+			return;
+		else
+		{
+			return $this->_memcache->setServerParams(
+				$host['host'],
+				$host['port'],
+				$host['timeout'],
+				$host['retry_interval'],
+				FALSE, // Server is offline
+				array($this, '_failed_request'
+				));
+		}
 	}
 }
