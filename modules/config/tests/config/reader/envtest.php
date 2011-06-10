@@ -9,7 +9,7 @@ class Config_Reader_EnvTest extends Kohana_Unittest_TestCase {
     }
 
     public function testDefault() {
-        Kohana::$environment = Kohana::DEVELOPMENT;
+        Env::$current = Env::DEV;
         Config::inst()->readers = array(new Config_Reader_File_Env);
         $this->assertEquals(Config::inst()->get('sample.hello.world'), 'default');
         $this->assertEquals(Config::inst()->get('sample.hello.onlydefault'), 'defval');
@@ -19,7 +19,7 @@ class Config_Reader_EnvTest extends Kohana_Unittest_TestCase {
      * @expectedException Config_Exception
      */
     public function testEnv() {
-        Kohana::$environment = Kohana::TESTING;
+        Env::$current = Env::TEST;
         Config::inst()->readers = array(new Config_Reader_File_Env);
         $this->assertEquals(Config::inst()->get('sample.hello.world'), 'test');
         $this->assertEquals(Config::inst()->get('sample.hello.onlytest'), 'testval');
