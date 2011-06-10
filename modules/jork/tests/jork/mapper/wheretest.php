@@ -186,7 +186,7 @@ class JORK_Mapper_WhereTest extends Kohana_Unittest_TestCase {
             )
         ), $db_query->joins);
         $this->assertEquals(array(
-            new DB_Expression_Binary('t_topics_0.id', '=', 14)
+            new DB_Expression_Binary('t_topics_0.id', '=', DB::esc('14'))
         ), $db_query->where_conditions);
     }
 }
