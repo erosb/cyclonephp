@@ -22,7 +22,10 @@ class Config_Reader_File implements Config_Reader {
 
         $current = &$arr;
         while ( ! empty($segments)) {
-            $current = &$current[array_shift($segments)];
+            $next = array_shift($segments);
+            if ( ! isset($current[$next]))
+                return Config::NOT_FOUND;
+            $current = &$current[$next];
         }
         return $current;
     }

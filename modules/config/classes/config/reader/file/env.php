@@ -7,12 +7,12 @@
 class Config_Reader_File_Env implements Config_Reader {
 
     /**
-     * @var Config_Readed_Files
+     * @var Config_Readed_File
      */
     protected $env_reader;
 
     /**
-     * @var Config_Readed_Files
+     * @var Config_Readed_File
      */
     protected $default_reader;
 
