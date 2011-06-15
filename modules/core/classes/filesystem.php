@@ -143,8 +143,10 @@ class FileSystem {
      */
     public static function save_cache() {
         if (self::$_cache_invalid) {
-            file_put_contents(self::$_path_cache_file
-                    , serialize(self::$_abs_file_paths));
+            if (@file_put_contents(self::$_path_cache_file
+                    , serialize(self::$_abs_file_paths))) {
+                error_log('failed to write absolute file path cache to: ' . self::$_path_cache_file);
+            }
         }
     }
 
