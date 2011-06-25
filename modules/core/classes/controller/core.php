@@ -13,7 +13,6 @@ class Controller_Core extends Controller_Template {
 
     public function before() {
         parent::before();
-        //$this->process_auth();
         if (Request::$is_ajax) {
             $this->auto_render = true;
         }
@@ -21,22 +20,6 @@ class Controller_Core extends Controller_Template {
             self::$config = Config::inst();
         }
         
-    }
-
-    protected function process_auth() {
-        try {
-            $auth_cfg = Kohana::config('auth');
-            $controller = $this->request->controller;
-            $action = $this->request->action;
-            foreach (array(
-                array_key_exists('#', $auth_cfg) ? $auth_cfg['#'] : true,
-                Arr::path($auth_cfg, $controller . '.#', true),
-                Arr::path($auth_cfg, $controller . '.' . $action, true)) as $rule) {
-                $this->process_auth_rule($rule);
-            }
-        } catch (Config_Exception $ex) {
-            
-        }
     }
 
     protected function process_auth_rule($rule) {

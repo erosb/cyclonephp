@@ -37,9 +37,16 @@ fieldset.cyform input, fieldset.cyform select, fieldset.cyform textarea {
 }
 
 fieldset.cyform input[type=submit] {
-
     margin-left: 30%;
     margin-right: 30%;
     width: 40%;
     text-align: center;
+}
+
+fieldset.cyform .error {
+    width: 100%;
+    text-align: center;
+    color: red;
+    font-weight: bold;
+    font-size: bold;
 }

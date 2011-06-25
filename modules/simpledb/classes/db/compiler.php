@@ -20,5 +20,7 @@ interface DB_Compiler {
     public function compile_update(DB_Query_Update $query);
 
     public function compile_delete(DB_Query_Delete $query);
+
+    public function escape_param($param);
     
 }
