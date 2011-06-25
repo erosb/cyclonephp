@@ -232,13 +232,6 @@ abstract class DB_Compiler_Abstract implements DB_Compiler {
         return $rval;
     }
 
-    /**
-     * This method is responsible for prventing SQL injection.
-     *
-     * @param string $param user parameter that should be escaped
-     */
-    protected abstract function escape_param($param);
-
     protected abstract function escape_table($table);
 
     protected function compile_expressions($expr_list) {

@@ -21,6 +21,11 @@ interface DB_Compiler {
 
     public function compile_delete(DB_Query_Delete $query);
 
+	/**
+     * This method is responsible for prventing SQL injection.
+     *
+     * @param string $param user parameter that should be escaped
+     */
     public function escape_param($param);
     
 }
