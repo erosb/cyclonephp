@@ -55,7 +55,7 @@ class CyForm {
      * @usedby CyForm::render()
      * @usedby CyForm_Field::render()
      */
-    const DEFAULT_THEME = 'cyform/default';
+    public static $default_theme = 'cyform/default';
 
     /**
      *
@@ -126,15 +126,23 @@ class CyForm {
 
     protected function add_assets() {
         if (NULL === $this->_model->theme) {
-            $this->_model->theme = self::DEFAULT_THEME;
+            $this->_model->theme = self::$default_theme;
         }
         $theme = $this->_model->theme;
         try {
             Asset_Pool::inst()->add_asset($theme, 'css');
-        } catch (Exception $ex) {}
+        } catch (Exception $ex) {
+            try {
+                Asset_Pool::inst()->add_asset(self::$default_theme, 'css');
+            } catch (Exception $ex) {}
+        }
         try {
             Asset_Pool::inst()->add_asset($theme, 'js');
-        } catch (Exception $ex) {}
+        } catch (Exception $ex) {
+            try {
+                Asset_Pool::inst()->add_asset(self::$default_theme, 'js');
+            } catch (Exception $ex) {}
+        }
     }
 
     /**
@@ -343,7 +351,7 @@ class CyForm {
                     'fields' => $this->_fields
                 ));
         } catch (Kohana_View_Exception $ex) {
-            $view = new View(self::DEFAULT_THEME . DIRECTORY_SEPARATOR
+            $view = new View(self::$default_theme . DIRECTORY_SEPARATOR
                     . $this->_model->view, array(
                     'model' => $this->_model,
                     'fields' => $this->_fields

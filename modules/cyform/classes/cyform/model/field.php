@@ -6,6 +6,8 @@
  */
 class CyForm_Model_Field {
 
+    public $attributes = array();
+
     public $name;
 
     public $type;
@@ -29,6 +31,26 @@ class CyForm_Model_Field {
     public function  __construct($type, $name = NULL) {
         $this->type = $type;
         $this->name = $name;
+    }
+
+
+    /**
+     * @param string $key
+     * @param string $value
+     * @return CyForm_Model_Field
+     */
+    public function attribute($key, $value) {
+        $this->attributes[$key] = $value;
+        return $this;
+    }
+
+    /**
+     * @param array $attributes HTML attributes (key => value pairs)
+     * @return CyForm_Model_Field
+     */
+    public function attributes($attributes) {
+        $this->attributes = $attributes;
+        return $this;
     }
 
     /**

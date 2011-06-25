@@ -228,7 +228,7 @@ class CyForm_Field {
                 .DIRECTORY_SEPARATOR.$this->_model->view,
                 (array) $this->_model);
         } catch (Kohana_View_Exception $ex) {
-            $view = new View(CyForm::DEFAULT_THEME . DIRECTORY_SEPARATOR
+            $view = new View(CyForm::$default_theme . DIRECTORY_SEPARATOR
                     . $this->_model->view, (array) $this->_model);
         }
         return $view->render();
