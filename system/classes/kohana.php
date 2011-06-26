@@ -7,6 +7,8 @@
  * - Auto-loading and transparent extension of classes
  * - Variable and path debugging
  *
+ * Modified by Bence Eros on 2011-06-26: added $echo param to Kohana::exception_handler()
+ *
  * @package    Kohana
  * @category   Base
  * @author     Kohana Team
@@ -796,9 +798,10 @@ class Kohana {
 	 *
 	 * @uses    Kohana::exception_text
 	 * @param   object   exception object
+         * @param   boolean flag determining if the method should echo the generated HTML stacktrace
 	 * @return  boolean
 	 */
-	public static function exception_handler(Exception $e)
+	public static function exception_handler(Exception $e, $echo = TRUE)
 	{
 		try
 		{
@@ -870,10 +873,14 @@ class Kohana {
 			// Include the exception HTML
 			include Kohana::find_file('views', 'kohana/error');
 
-			// Display the contents of the output buffer
-			echo ob_get_clean();
+                        $html = ob_get_clean();
 
-			return TRUE;
+                        if ($echo) {
+                            // Display the contents of the output buffer
+                            echo $html;
+                        }
+
+			return $html;
 		}
 		catch (Exception $e)
 		{
