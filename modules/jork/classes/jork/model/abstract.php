@@ -253,7 +253,7 @@ abstract class JORK_Model_Abstract implements ArrayAccess, IteratorAggregate{
                 if (isset($schema->atomics[$k])) {
                     $this->_atomics[$k] = array(
                         'value' => $this->force_type($v, $schema->atomics[$k]['type']),
-                        'persistent' => TRUE
+                        'persistent' => FALSE
                     );
                 }
             }
@@ -262,7 +262,7 @@ abstract class JORK_Model_Abstract implements ArrayAccess, IteratorAggregate{
                 if (isset($schema->atomics[$k])) {
                     $this->_atomics[$k] = array(
                         'value' => $v,
-                        'persistent' => TRUE
+                        'persistent' => FALSE
                     );
                 }
             }
