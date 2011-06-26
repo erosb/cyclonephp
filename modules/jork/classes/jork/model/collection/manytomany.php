@@ -53,7 +53,9 @@ class JORK_Model_Collection_ManyToMany extends JORK_Model_Collection {
                     );
                 }
             }
-            $ins_stmt->exec($db_conn);
+            if ( ! empty($ins_stmt->values)) {
+                $ins_stmt->exec($db_conn);
+            }
         }
         $this->_persistent = TRUE;
     }
