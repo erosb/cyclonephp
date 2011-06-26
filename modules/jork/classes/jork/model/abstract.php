@@ -688,7 +688,9 @@ abstract class JORK_Model_Abstract implements ArrayAccess, IteratorAggregate{
         // turn the lock on
         $this->_save_in_progress = TRUE;
         foreach ($comps as $comp) {
-            $comp['value']->save();
+            if ( ! is_null($comp['value'])) {
+                $comp['value']->save();
+            }
         }
         $this->_save_in_progress = FALSE;
     }
