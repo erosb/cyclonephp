@@ -130,7 +130,7 @@ class FileSystem {
     public static function run_init_scripts() {
          foreach (self::$_roots as $module_name => $root_path) {
             if (file_exists($fname =
-                    ($root_path . DIRECTORY_SEPARATOR . self::MODULE_BOOTSTRAP_FILE))) {
+                    ($root_path . self::MODULE_BOOTSTRAP_FILE))) {
                 include $fname;
             }
         }
