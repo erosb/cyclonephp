@@ -103,8 +103,11 @@ class JORK_Mapper_Result_Default extends JORK_Mapper_Result {
                     $obj_result_row[$alias] = $mapper->get_last_entity();
                 }
                 foreach ($this->_atomic_mappers as $alias => $mapper) {
-                    $obj_result_row[$alias] = $mapper->get_last_entity()
-                            ->{$this->_atomic_props[$alias]};
+                    $last_entity = $mapper->get_last_entity();
+                    $obj_result_row[$alias] = NULL === $last_entity
+                            ? NULL
+                            : $mapper->get_last_entity()
+                                ->{$this->_atomic_props[$alias]};
                 }
                 $obj_result [] = &$obj_result_row;
             }
